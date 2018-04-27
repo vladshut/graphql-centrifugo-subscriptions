@@ -1,34 +1,33 @@
-import { CentrifugoClient, CentrifugoClientOptions } from 'graphql-centrifugo-client';
+import { CentrifugoClient } from 'graphql-centrifugo-client';
 import { PubSubEngine } from 'graphql-subscriptions';
 import { PubSubAsyncIterator } from './pubsub-async-iterator';
 
 export interface PubSubCentrifugoOptions {
-  centrifugoClientOptions: CentrifugoClientOptions,
+  centrifugoClient: CentrifugoClient,
+  onEmptySubscribers: Function,
 }
 
 export class CentrifugoPubSub implements PubSubEngine {
   private centrifugoClient: CentrifugoClient;
-  private subscriptionMap: { [subId: number]: [string, Function] };
-  private subsRefsMap: { [trigger: string]: Array<number> };
-  private currentSubscriptionId: number;
+  private subscriptionMap: { [subId: number]: [string, Function] } = {};
+  private subsRefsMap: { [trigger: string]: Array<number> } = {};
+  private currentSubscriptionId: number = 0;
+  private onEmptySubscribers: Function = () => {};
+  private id: string;
 
   constructor(options: PubSubCentrifugoOptions) {
-    let centrifugoClientOptions = options.centrifugoClientOptions;
-    centrifugoClientOptions['onMessage'] = this.onMessage;
-    this.centrifugoClient = new CentrifugoClient(centrifugoClientOptions);
+    this.centrifugoClient = options.centrifugoClient;
+    this.id = this.centrifugoClient.getId();
+    this.onEmptySubscribers = options.onEmptySubscribers;
+    this.centrifugoClient.setOnMessageCallback(this.onMessage.bind(this));
   }
 
   public publish(trigger: string, payload: any): boolean {
-      // TODO: implement method
-
-      return false;
+    // TODO: implement method
+    return false;
   }
 
-  public subscribe(
-    triggerName: string,
-    onMessage: Function,
-    options?: Object,
-  ): Promise<number> {
+  public subscribe(triggerName: string, onMessage: Function, options?: Object): Promise<number> {
     const id = this.currentSubscriptionId++;
     this.subscriptionMap[id] = [triggerName, onMessage];
 
@@ -38,7 +37,13 @@ export class CentrifugoPubSub implements PubSubEngine {
       return Promise.resolve(id);
     } else {
       return new Promise<number>((resolve, reject) => {
-        this.centrifugoClient.subscribe(triggerName, options["lastMessageId"]);
+        let lastMessageId = null;
+
+        if (options && options['lastMessageId']) {
+          lastMessageId = options['lastMessageId'];
+        }
+
+        this.centrifugoClient.subscribe(triggerName, lastMessageId);
 
         this.subsRefsMap[triggerName] = [...(this.subsRefsMap[triggerName] || []), id];
 
@@ -62,6 +67,10 @@ export class CentrifugoPubSub implements PubSubEngine {
     }
 
     delete this.subscriptionMap[subId];
+
+    if (Object.keys(this.subscriptionMap).length === 0) {
+      this.onEmptySubscribers(this.id);
+    }
   }
 
   public asyncIterator<T>(triggers: string | string[]): AsyncIterator<T> {
@@ -80,7 +89,7 @@ export class CentrifugoPubSub implements PubSubEngine {
 
     for (const subId of subscribers) {
       const [, listener] = this.subscriptionMap[subId];
-      listener(message);
+      listener(channel, message);
     }
   }
 }
