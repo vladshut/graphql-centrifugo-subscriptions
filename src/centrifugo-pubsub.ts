@@ -73,8 +73,8 @@ export class CentrifugoPubSub implements PubSubEngine {
     }
   }
 
-  public asyncIterator<T>(triggers: string | string[]): AsyncIterator<T> {
-    return new PubSubAsyncIterator<T>(this, triggers);
+  public asyncIterator<T>(triggers: string | string[], options?: Object): AsyncIterator<T> {
+    return new PubSubAsyncIterator<T>(this, triggers, options);
   }
 
   public cnetrifugoClient(): CentrifugoClient {
