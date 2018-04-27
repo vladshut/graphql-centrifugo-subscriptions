@@ -32,13 +32,13 @@ import { PubSubEngine } from 'graphql-subscriptions';
  */
 export class PubSubAsyncIterator<T> implements AsyncIterator<T> {
 
-  constructor(pubsub: PubSubEngine, eventNames: string | string[]) {
+  constructor(pubsub: PubSubEngine, eventNames: string | string[], options?: Object) {
     this.pubsub = pubsub;
     this.pullQueue = [];
     this.pushQueue = [];
     this.listening = true;
     this.eventsArray = typeof eventNames === 'string' ? [eventNames] : eventNames;
-    this.allSubscribed = this.subscribeAll();
+    this.allSubscribed = this.subscribeAll(options);
   }
 
   public async next() {
@@ -96,9 +96,9 @@ export class PubSubAsyncIterator<T> implements AsyncIterator<T> {
     }
   }
 
-  private subscribeAll() {
+  private subscribeAll(options?: Object) {
     return Promise.all(this.eventsArray.map(
-      eventName => this.pubsub.subscribe(eventName, this.pushValue.bind(this), {}),
+      eventName => this.pubsub.subscribe(eventName, this.pushValue.bind(this), options),
     ));
   }
 
