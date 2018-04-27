@@ -39,7 +39,7 @@ describe('CentrifugoPubSub', () => {
         let callback = c => { centrifugoClientMock.target.setOnMessageCallback(c); };
         centrifugoClientMock.setup(x => x.setOnMessageCallback(TypeMoq.It.isAny())).callback(callback);
         centrifugoClient = centrifugoClientMock.object;
-        onEmptySubscribersSpy = spy((pubSubId: string) => {});
+        onEmptySubscribersSpy = spy(() => {});
         mockOptions = {
             centrifugoClient: centrifugoClient,
             onEmptySubscribers: onEmptySubscribersSpy as Function,
