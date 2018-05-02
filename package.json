@@ -1,6 +1,6 @@
 {
   "name": "graphql-centrifugo-subscriptions",
-  "version": "1.4.0",
+  "version": "1.5.0",
   "description": "A graphql-subscriptions PubSub Engine using centrifugo",
   "main": "dist/index.js",
   "repository": {
