@@ -1,2 +1,2 @@
 export {CentrifugoPubSub, PubSubCentrifugoOptions} from "./centrifugo-pubsub";
-export {PubSubStore} from "./pubsub-store";
+export {PubSubFactory} from "./pubsub-factory";

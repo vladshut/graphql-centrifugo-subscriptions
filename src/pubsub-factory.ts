@@ -1,7 +1,7 @@
 import { CentrifugoPubSub } from "./centrifugo-pubsub";
 import {CentrifugoClient, CentrifugoClientOptions} from "graphql-centrifugo-client";
 
-export class PubSubStore {
+export class PubSubFactory {
     private store = new Map<string, CentrifugoPubSub>();
     private centrifugoClientOptions: CentrifugoClientOptions;
     private keyPrefix: string;
