@@ -1,11 +1,11 @@
-import { CentrifugoPubSub } from "./centrifugo-pubsub";
+import {CentrifugoPubSub, PubSubCentrifugoOptions} from "./centrifugo-pubsub";
 import {CentrifugoClient, CentrifugoClientOptions} from "graphql-centrifugo-client";
 import {isNumber} from "util";
 
 export class PubSubFactory {
-    private store = new Map<string, CentrifugoPubSub>();
-    private centrifugoClientOptions: CentrifugoClientOptions;
-    private keyPrefix: string;
+    protected store = new Map<string, CentrifugoPubSub>();
+    protected centrifugoClientOptions: CentrifugoClientOptions;
+    protected keyPrefix: string;
 
     public constructor(options: CentrifugoClientOptions, keyPrefix: string = '') {
         this.centrifugoClientOptions = options;
@@ -16,46 +16,51 @@ export class PubSubFactory {
         key = this.prepareKey(key);
 
         if (!this.hasPubsub(key)) {
-            let options = this.centrifugoClientOptions;
-            options.id = key;
-
-            const centrifugoClient = new CentrifugoClient(options);
-            const pubSubOptions = {
-                centrifugoClient,
-                onEmptySubscribers: this.removePubsub.bind(this),
-            };
-
-            const centrifugoPubSub = new CentrifugoPubSub(pubSubOptions);
-
-            this.setPubsub(key, centrifugoPubSub);
+            this.setPubsub(key, this.createCentrifugoPubSub(key));
         }
 
         return this.getPubsub(key);
     }
 
-    private getPubsub(key: string): CentrifugoPubSub {
+    protected getPubsub(key: string): CentrifugoPubSub {
         return this.store.get(key);
     }
 
-    private setPubsub(key: string, pubsub: CentrifugoPubSub): void {
+    protected setPubsub(key: string, pubsub: CentrifugoPubSub): void {
         this.store.set(key, pubsub);
     }
 
-    private hasPubsub(key: string): boolean {
+    protected hasPubsub(key: string): boolean {
         return this.store.has(key);
     }
 
-    private removePubsub(key: string): void {
+    protected removePubsub(key: string): void {
         if (this.store.has(key)) {
             this.store.delete(key);
         }
     }
 
-    private prepareKey(key: string | number): string {
+    protected prepareKey(key: string | number): string {
         if (isNumber(key)) {
             key = key.toString()
         }
 
         return this.keyPrefix ? this.keyPrefix + '_' + key : key;
+    }
+    
+    protected createCentrifugoPubSub(key: string): CentrifugoPubSub {
+        const pubSubOptions = this.createPubSubOptions(key);
+
+        return new CentrifugoPubSub(pubSubOptions);
+    }
+    
+    protected createPubSubOptions(key: string): PubSubCentrifugoOptions {
+        let centrifugoClientOptions = this.centrifugoClientOptions;
+        centrifugoClientOptions.id = key;
+
+        return {
+            centrifugoClient: new CentrifugoClient(centrifugoClientOptions),
+            onEmptySubscribers: this.removePubsub.bind(this),
+        };
     }
 }
