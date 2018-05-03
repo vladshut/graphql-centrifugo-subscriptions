@@ -1,5 +1,6 @@
 import { CentrifugoPubSub } from "./centrifugo-pubsub";
 import {CentrifugoClient, CentrifugoClientOptions} from "graphql-centrifugo-client";
+import {isNumber} from "util";
 
 export class PubSubFactory {
     private store = new Map<string, CentrifugoPubSub>();
@@ -11,7 +12,7 @@ export class PubSubFactory {
         this.keyPrefix = keyPrefix;
     }
 
-    public get(key: string = 'guest'): CentrifugoPubSub {
+    public get(key: string | number = 'guest'): CentrifugoPubSub {
         key = this.prepareKey(key);
 
         if (!this.hasPubsub(key)) {
@@ -50,7 +51,11 @@ export class PubSubFactory {
         }
     }
 
-    private prepareKey(key: string): string {
+    private prepareKey(key: string | number): string {
+        if (isNumber(key)) {
+            key = key.toString()
+        }
+
         return this.keyPrefix ? this.keyPrefix + '_' + key : key;
     }
 }
