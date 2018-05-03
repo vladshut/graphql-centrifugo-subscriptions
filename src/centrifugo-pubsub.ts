@@ -96,7 +96,7 @@ export class CentrifugoPubSub implements PubSubEngine {
 
     for (const subId of subscribers) {
       const [, listener] = this.subscriptionMap[subId];
-      listener(channel, parsedMessage);
+      listener(parsedMessage, channel);
     }
   }
 }

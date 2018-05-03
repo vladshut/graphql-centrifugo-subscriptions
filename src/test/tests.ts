@@ -55,7 +55,7 @@ describe('CentrifugoPubSub', () => {
     it('allow to subscribe to specific channel and invoke callback when a message is published', function (done) {
         const pubSub = new CentrifugoPubSub(mockOptions);
 
-        pubSub.subscribe('notifications', (channel, message) => {
+        pubSub.subscribe('notifications', (message, channel) => {
             try {
                 chai.expect(message).to.equals('test');
                 chai.expect(channel).to.equals('notifications');
@@ -113,7 +113,7 @@ describe('CentrifugoPubSub', () => {
             pubSub.subscribe('notifications', () => {
                 done('Not supposed to be triggered');
             }),
-            pubSub.subscribe('notifications', (channel, message) => {
+            pubSub.subscribe('notifications', (message, channel) => {
                 try {
                     chai.expect(message).to.equals('test');
                     chai.expect(channel).to.equals('notifications');
@@ -220,7 +220,7 @@ describe('CentrifugoPubSub', () => {
     it('invoke parse json message and pass parsed object to subscribers', function (done) {
         const pubSub = new CentrifugoPubSub(mockOptions);
 
-        pubSub.subscribe('notifications', (channel, message) => {
+        pubSub.subscribe('notifications', (message, channel) => {
             try {
                 chai.expect(message.message).to.equals('test');
                 done();
