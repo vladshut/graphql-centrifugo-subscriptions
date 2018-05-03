@@ -81,15 +81,22 @@ export class CentrifugoPubSub implements PubSubEngine {
     return this.centrifugoClient;
   }
 
-  private onMessage(channel: string, message: string) {
+  protected onMessage(channel: string, message: string) {
     const subscribers = this.subsRefsMap[channel];
 
     // Don't work for nothing..
     if (!subscribers || !subscribers.length) return;
 
+    let parsedMessage;
+    try {
+      parsedMessage = JSON.parse(message);
+    } catch (e) {
+      parsedMessage = message;
+    }
+
     for (const subId of subscribers) {
       const [, listener] = this.subscriptionMap[subId];
-      listener(channel, message);
+      listener(channel, parsedMessage);
     }
   }
 }

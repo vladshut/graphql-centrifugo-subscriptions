@@ -215,6 +215,20 @@ describe('CentrifugoPubSub', () => {
                 done(e);
             }
         });
+    });
 
+    it('invoke parse json message and pass parsed object to subscribers', function (done) {
+        const pubSub = new CentrifugoPubSub(mockOptions);
+
+        pubSub.subscribe('notifications', (channel, message) => {
+            try {
+                chai.expect(message.message).to.equals('test');
+                done();
+            } catch (e) {
+                done(e);
+            }
+        })
+        ;
+        centrifugoClient.getOnMessageCallback()('notifications', '{"message": "test"}');
     });
 });
