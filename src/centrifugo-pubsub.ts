@@ -77,10 +77,6 @@ export class CentrifugoPubSub implements PubSubEngine {
     return new PubSubAsyncIterator<T>(this, triggers, options);
   }
 
-  public cnetrifugoClient(): CentrifugoClient {
-    return this.centrifugoClient;
-  }
-
   protected onMessage(channel: string, message: string) {
     const subscribers = this.subsRefsMap[channel];
 
