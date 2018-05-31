@@ -22,6 +22,11 @@ export class PubSubFactory {
         return this.getPubsub(key);
     }
 
+    public remove(key: string): void {
+        key = this.prepareKey(key);
+        this.removePubsub(key);
+    }
+
     protected getPubsub(key: string): CentrifugoPubSub {
         return this.store.get(key);
     }
