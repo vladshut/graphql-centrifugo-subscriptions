@@ -14,6 +14,7 @@ export class CentrifugoPubSub implements PubSubEngine {
   private currentSubscriptionId: number = 0;
   private onEmptySubscribers: Function = () => {};
   private id: string;
+  private iterators = [];
 
   constructor(options: PubSubCentrifugoOptions) {
     this.centrifugoClient = options.centrifugoClient;
@@ -74,7 +75,21 @@ export class CentrifugoPubSub implements PubSubEngine {
   }
 
   public asyncIterator<T>(triggers: string | string[], options?: Object): AsyncIterator<T> {
-    return new PubSubAsyncIterator<T>(this, triggers, options);
+    const iterator = new PubSubAsyncIterator<T>(this, triggers, options);
+    this.iterators.push(iterator);
+
+    return iterator;
+  }
+
+  public close() {
+    this.centrifugoClient.close();
+    this.centrifugoClient = null;
+
+    for (const iterator of this.iterators) {
+      iterator.close();
+    }
+
+    this.iterators = null;
   }
 
   protected onMessage(channel: string, message: string) {

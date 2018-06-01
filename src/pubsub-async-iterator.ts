@@ -41,6 +41,12 @@ export class PubSubAsyncIterator<T> implements AsyncIterator<T> {
     this.allSubscribed = this.subscribeAll(options);
   }
 
+  public async close() {
+    this.pubsub = null;
+    this.emptyQueue(await this.allSubscribed);
+    this.eventsArray = [];
+  }
+
   public async next() {
     await this.allSubscribed;
     return this.listening ? this.pullValue() : this.return();
