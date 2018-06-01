@@ -42,8 +42,8 @@ export class PubSubAsyncIterator<T> implements AsyncIterator<T> {
   }
 
   public async close() {
-    this.pubsub = null;
     this.emptyQueue(await this.allSubscribed);
+    this.pubsub = null;
     this.eventsArray = [];
   }
 
