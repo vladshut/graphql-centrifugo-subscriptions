@@ -22,7 +22,6 @@ const centrifugoClientOptions = {
 let centrifugoClientInstance: CentrifugoClient;
 let centrifugoClientMock: TypeMoq.IMock<CentrifugoClient>;
 let centrifugoClient: CentrifugoClient;
-let onEmptySubscribersSpy;
 let mockOptions: PubSubCentrifugoOptions;
 
 
@@ -39,17 +38,14 @@ describe('CentrifugoPubSub', () => {
         let callback = c => { centrifugoClientMock.target.setOnMessageCallback(c); };
         centrifugoClientMock.setup(x => x.setOnMessageCallback(TypeMoq.It.isAny())).callback(callback);
         centrifugoClient = centrifugoClientMock.object;
-        onEmptySubscribersSpy = spy(() => {});
         mockOptions = {
             centrifugoClient: centrifugoClient,
-            onEmptySubscribers: onEmptySubscribersSpy as Function,
         };
     });
 
     afterEach(() => {
         sandbox.restore();
         clock.restore();
-        onEmptySubscribersSpy.reset();
     });
 
     it('allow to subscribe to specific channel and invoke callback when a message is published', function (done) {
@@ -197,24 +193,6 @@ describe('CentrifugoPubSub', () => {
         const pubSub = new CentrifugoPubSub(mockOptions);
         return chai.expect(() => pubSub.unsubscribe(123))
             .to.throw('There is no subscription of id "123"');
-    });
-
-    it('invoke onEmptySubscribers callback if it has no subscribers', function (done) {
-        const pubSub = new CentrifugoPubSub(mockOptions);
-
-        const subscriptionPromises = [
-            pubSub.subscribe('notifications', () => {}),
-        ];
-
-        Promise.all(subscriptionPromises).then(subIds => {
-            try {
-                pubSub.unsubscribe(subIds[0]);
-                chai.expect(onEmptySubscribersSpy.callCount).to.equals(1);
-                done();
-            } catch (e) {
-                done(e);
-            }
-        });
     });
 
     it('invoke parse json message and pass parsed object to subscribers', function (done) {

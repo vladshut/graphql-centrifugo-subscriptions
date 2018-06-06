@@ -4,7 +4,6 @@ import { PubSubAsyncIterator } from './pubsub-async-iterator';
 
 export interface PubSubCentrifugoOptions {
   centrifugoClient: CentrifugoClient,
-  onEmptySubscribers: Function,
 }
 
 export class CentrifugoPubSub implements PubSubEngine {
@@ -12,14 +11,12 @@ export class CentrifugoPubSub implements PubSubEngine {
   private subscriptionMap: { [subId: number]: [string, Function] } = {};
   private subsRefsMap: { [trigger: string]: Array<number> } = {};
   private currentSubscriptionId: number = 0;
-  private onEmptySubscribers: Function = () => {};
   private id: string;
   private iterators = [];
 
   constructor(options: PubSubCentrifugoOptions) {
     this.centrifugoClient = options.centrifugoClient;
     this.id = this.centrifugoClient.getId();
-    this.onEmptySubscribers = options.onEmptySubscribers;
     this.centrifugoClient.setOnMessageCallback(this.onMessage.bind(this));
   }
 
@@ -68,10 +65,6 @@ export class CentrifugoPubSub implements PubSubEngine {
     }
 
     delete this.subscriptionMap[subId];
-
-    if (Object.keys(this.subscriptionMap).length === 0) {
-      this.onEmptySubscribers(this.id);
-    }
   }
 
   public asyncIterator<T>(triggers: string | string[], options?: Object): AsyncIterator<T> {
@@ -82,14 +75,19 @@ export class CentrifugoPubSub implements PubSubEngine {
   }
 
   public close() {
-    this.centrifugoClient.close();
-    this.centrifugoClient = null;
+
+    let closes = [];
 
     for (const iterator of this.iterators) {
-      iterator.close();
+      closes.push(iterator.close);
     }
 
-    this.iterators = null;
+    Promise.all(closes).then(() => {
+        this.centrifugoClient.close();
+        this.centrifugoClient = null;
+
+        this.iterators = null;
+    });
   }
 
   protected onMessage(channel: string, message: string) {
