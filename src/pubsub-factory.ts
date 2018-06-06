@@ -12,12 +12,12 @@ export class PubSubFactory {
     }
 
     public get(id: string | number = 'guest'): CentrifugoPubSub {
-        id = this.prepareid(id);
+        id = this.prepareId(id);
 
         return this.createCentrifugoPubSub(id);
     }
 
-    protected prepareid(id: string | number): string {
+    protected prepareId(id: string | number): string {
         if (isNumber(id)) {
             id = id.toString()
         }
