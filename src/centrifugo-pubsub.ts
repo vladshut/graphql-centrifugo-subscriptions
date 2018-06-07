@@ -12,7 +12,7 @@ export class CentrifugoPubSub implements PubSubEngine {
   private subsRefsMap: { [trigger: string]: Array<number> } = {};
   private currentSubscriptionId: number = 0;
   private id: string;
-  private iterators = [];
+  private iterators: Array<PubSubAsyncIterator<any>> = [];
 
   constructor(options: PubSubCentrifugoOptions) {
     this.centrifugoClient = options.centrifugoClient;
@@ -79,7 +79,7 @@ export class CentrifugoPubSub implements PubSubEngine {
     let closes = [];
 
     for (const iterator of this.iterators) {
-      closes.push(iterator.close);
+      closes.push(iterator.close());
     }
 
     Promise.all(closes).then(() => {
