@@ -41,12 +41,6 @@ export class PubSubAsyncIterator<T> implements AsyncIterator<T> {
     this.allSubscribed = this.subscribeAll(options);
   }
 
-  public async close() {
-    this.emptyQueue(await this.allSubscribed);
-    this.pubsub = null;
-    this.eventsArray = [];
-  }
-
   public async next() {
     await this.allSubscribed;
     return this.listening ? this.pullValue() : this.return();
@@ -100,6 +94,8 @@ export class PubSubAsyncIterator<T> implements AsyncIterator<T> {
       this.pullQueue.length = 0;
       this.pushQueue.length = 0;
     }
+
+      this.pubsub = null;
   }
 
   private subscribeAll(options?: Object) {

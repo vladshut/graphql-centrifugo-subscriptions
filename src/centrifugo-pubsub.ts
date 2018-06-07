@@ -11,13 +11,9 @@ export class CentrifugoPubSub implements PubSubEngine {
   private subscriptionMap: { [subId: number]: [string, Function] } = {};
   private subsRefsMap: { [trigger: string]: Array<number> } = {};
   private currentSubscriptionId: number = 0;
-  private id: string;
-  private iterators: Array<PubSubAsyncIterator<any>> = [];
 
   constructor(options: PubSubCentrifugoOptions) {
     this.centrifugoClient = options.centrifugoClient;
-    this.id = this.centrifugoClient.getId();
-    this.centrifugoClient.setOnMessageCallback(this.onMessage.bind(this));
   }
 
   public publish(trigger: string, payload: any): boolean {
@@ -41,6 +37,7 @@ export class CentrifugoPubSub implements PubSubEngine {
           lastMessageId = options['lastMessageId'];
         }
 
+        this.centrifugoClient.setOnMessageCallback(this.onMessage.bind(this));
         this.centrifugoClient.subscribe(triggerName, lastMessageId);
 
         this.subsRefsMap[triggerName] = [...(this.subsRefsMap[triggerName] || []), id];
@@ -65,29 +62,14 @@ export class CentrifugoPubSub implements PubSubEngine {
     }
 
     delete this.subscriptionMap[subId];
+
+    if (Object.keys(this.subscriptionMap).length === 0) {
+        this.centrifugoClient.close();
+    }
   }
 
   public asyncIterator<T>(triggers: string | string[], options?: Object): AsyncIterator<T> {
-    const iterator = new PubSubAsyncIterator<T>(this, triggers, options);
-    this.iterators.push(iterator);
-
-    return iterator;
-  }
-
-  public close() {
-
-    let closes = [];
-
-    for (const iterator of this.iterators) {
-      closes.push(iterator.close());
-    }
-
-    Promise.all(closes).then(() => {
-        this.centrifugoClient.close();
-        this.centrifugoClient = null;
-
-        this.iterators = null;
-    });
+      return new PubSubAsyncIterator<T>(this, triggers, options);
   }
 
   protected onMessage(channel: string, message: string) {
