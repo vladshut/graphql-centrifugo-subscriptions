@@ -33,7 +33,7 @@
     "prepublishOnly": "npm run test"
   },
   "dependencies": {
-    "graphql-centrifugo-client": "^2.1.0",
+    "graphql-centrifugo-client": "^2.2.0",
     "graphql-subscriptions": "^0.5.8",
     "iterall": "^1.2.2"
   },
